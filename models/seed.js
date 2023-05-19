@@ -16,7 +16,7 @@ mongoose.connect(
     // Create a user
     const user = new User({
       username: "admin",
-      password: "Pa$$w0rd",
+      password: "123",
     });
 
     // Save the user to the database

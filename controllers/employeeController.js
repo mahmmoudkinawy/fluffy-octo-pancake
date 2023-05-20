@@ -66,32 +66,37 @@ router.get("/list", (req, res) => {
     }
   });
 });
-
 router.get("/search", (req, res) => {
   const searchQuery = req.query.q;
+  const searchCriteria = req.query.criteria; // Get the selected search criteria
 
-  Employee.find(
-    { fullName: { $regex: searchQuery, $options: "i" } },
-    (err, results) => {
-      if (!err) {
-        Employee.find((err, docs) => {
-          if (!err) {
-            res.render("employee/list", {
-              list: docs,
-              results: results,
-              searchQuery: searchQuery,
-            });
-          } else {
-            console.log("Error in retrieving employee list: " + err);
-            res.redirect("/employee/list");
-          }
-        });
-      } else {
-        console.log("Error in retrieving employee list: " + err);
-        res.redirect("/employee/list");
-      }
+  let query = {};
+
+  if (searchCriteria === "name") {
+    query = { fullName: { $regex: searchQuery, $options: "i" } };
+  } else if (searchCriteria === "city") {
+    query = { city: { $regex: searchQuery, $options: "i" } };
+  }
+
+  Employee.find(query, (err, results) => {
+    if (!err) {
+      Employee.find((err, docs) => {
+        if (!err) {
+          res.render("employee/list", {
+            list: docs,
+            results: results,
+            searchQuery: searchQuery,
+          });
+        } else {
+          console.log("Error in retrieving employee list: " + err);
+          res.redirect("/employee/list");
+        }
+      });
+    } else {
+      console.log("Error in retrieving employee list: " + err);
+      res.redirect("/employee/list");
     }
-  );
+  });
 });
 
 function handleValidationError(err, body) {
@@ -128,49 +133,6 @@ router.get("/delete/:id", (req, res) => {
       console.log("Error in employee delete :" + err);
     }
   });
-});
-
-router.get("/sort/:order", (req, res) => {
-  const order = req.params.order;
-  let sortOption = { fullName: 1 }; // Default to ascending order
-
-  if (order === "desc") {
-    sortOption = { fullName: -1 }; // Descending order
-  }
-
-  Employee.find()
-    .sort(sortOption)
-    .exec((err, docs) => {
-      if (!err) {
-        res.render("employee/list", {
-          list: docs,
-        });
-      } else {
-        console.log("Error in sorting employees:", err);
-        res.redirect("/employee/list");
-      }
-    });
-});
-// Add a new route for handling the search functionality
-router.get("/search", (req, res) => {
-  const searchQuery = req.query.q; // Get the search query parameter
-
-  // Find employees that match the search query
-  Employee.find(
-    { fullName: { $regex: searchQuery, $options: "i" } },
-    "fullName mobile",
-    (err, docs) => {
-      if (!err) {
-        res.render("employee/search", {
-          results: docs,
-          searchQuery: searchQuery,
-        });
-      } else {
-        console.log("Error in employee search:", err);
-        res.redirect("/employee/list");
-      }
-    }
-  );
 });
 
 module.exports = router;
